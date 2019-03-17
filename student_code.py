@@ -133,15 +133,66 @@ class KnowledgeBase(object):
     def kb_explain(self, fact_or_rule):
         """
         Explain where the fact or rule comes from
-
         Args:
             fact_or_rule (Fact or Rule) - Fact or rule to be explained
-
         Returns:
             string explaining hierarchical support from other Facts and rules
         """
         ####################################################
         # Student code goes here
+        explanation = self.kb_explain_step(fact_or_rule, 0)
+        print(explanation)
+        return explanation
+
+
+    def kb_explain_step(self, fact_or_rule, spaces):
+        stt = ""
+        indent = " "*spaces
+        line = indent
+        #if FACT
+        if isinstance(fact_or_rule, Fact):
+            if not self._get_fact(fact_or_rule): #not in KB
+                return "Fact is not in the KB"
+            else:                                #in KB
+                stt = self._get_fact(fact_or_rule)
+                line += "fact: " + str(stt.statement)
+        #if RULE
+        elif isinstance(fact_or_rule, Rule):
+            if not self._get_rule(fact_or_rule): #not in KB
+                return "Rule is not in the KB"
+            else:                                #in KB
+                stt = self._get_rule(fact_or_rule)
+                first = True
+                for frag in stt.lhs:
+                    if first:
+                        line += "rule: ("
+                        first = False
+                    else:
+                        line += ", "
+                    line += str(frag)
+                line += ") -> " + str(stt.rhs)
+        #if NEITHER
+        else:
+            print("The input was neither Fact nor Rule")
+            return False
+        
+        #formatting ending
+        if stt.asserted:
+            line += " ASSERTED"
+        line += "\n"
+        # 'supported by' add-ons at the end
+        if stt.supported_by:
+            for sup in stt.supported_by:
+                #print(pair)
+                #print()
+                #print(pair[0])
+                #print(pair[1])
+                #print()
+                line += indent + "  SUPPORTED BY\n"
+                line += self.kb_explain_step(sup[0], spaces + 4)
+                line += self.kb_explain_step(sup[1], spaces + 4)
+
+        return line
 
 
 class InferenceEngine(object):
